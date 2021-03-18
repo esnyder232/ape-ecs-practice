@@ -28,7 +28,7 @@ class Game {
 		this.world.registerComponent(ActionMoveComponent.ActionMoveComponent, 10);
 		
 		//register tags
-		this.world.registerTags("Character", "PlayerControlled");
+		this.world.registerTags("Character", "PlayerControlled", "MyTag1", "MyTag2");
 		
 		//register Systems
 		this.world.registerSystem("everyFrame", ActionSystem.ActionSystem);
@@ -43,9 +43,10 @@ class Game {
 			components: [
 				{
 					type: "PositionComponent",
-					name: "My Position",
+					name: "My Position AAA",
 					x: 1,
-					y: 2
+					y: 2,
+					key: "myFirstPosition"
 				},
 				// {
 				// 	type: "PositionComponent",
@@ -55,7 +56,8 @@ class Game {
 				// },
 				{
 					type: "ActionMoveComponent",
-					name: "My Action Move"
+					name: "My Action Move",
+					key: "myActionnnnnn"
 				}
 			]
 		});
@@ -64,7 +66,7 @@ class Game {
 			components: [
 				{
 					type: "PositionComponent",
-					name: "My Position",
+					name: "My Position BBB",
 					x: 1,
 					y: 2
 				}
@@ -80,10 +82,65 @@ class Game {
 			]
 		});
 
+		//testing a query
 		this.myQuery = this.world.createQuery().fromAll("PositionComponent");
 		var myQueryResults = this.myQuery.execute();
-		
 		console.log('game init query results: ' + myQueryResults.size);
+
+		//getting properties of entites
+		var posA = this.entityA.getComponents("PositionComponent");
+
+		console.log('entity id is: ' + this.entityA.id);
+		for(const ctype of Object.keys(this.entityA.types))
+		{
+			for(const component of this.entityA.types[ctype])
+			{
+				console.log('type is: ' + ctype + ". Id: " + component.id);
+			}
+		}
+
+		var hasResult = this.entityA.has("ActionMoveComponent");
+		var hasResult2 = this.entityB.has("ActionMoveComponent");
+		
+
+		var posSet = this.entityA.getComponents("PositionComponentasdf");
+		var posOne = this.entityA.getOne("PositionComponent");
+
+
+		this.entityA.addTag("MyTag1");
+		this.entityA.removeTag("MyTag2");
+
+		//adding components
+		this.entityA.addComponent({
+			type: "PositionComponent",
+			key: "myPositionAgain",
+			x: 123,
+			y: 321
+		});
+
+		//removeing components
+		this.entityA.removeComponent(this.entityA.c.myPositionAgain);
+		this.entityA.removeComponent(this.entityA.c.myPositionAgain);
+
+
+		var obj = this.entityA.getObject();
+
+		//destroy entity
+		//this.entityA.destroy();
+
+
+		this.entityF = this.world.createEntity({
+			c: {
+				PositionComponent: {
+					x: 777,
+					y: 908
+				},
+				PositionComponent: {
+					x: 9,
+					y: 12
+				}
+			}
+		})
 
 		console.log('game init done');
 

@@ -10,4 +10,10 @@ ActionMoveComponent.properties = {
 	y: 0
 }
 
+
+
+
+
+
+
 exports.ActionMoveComponent = ActionMoveComponent;

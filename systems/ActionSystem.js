@@ -10,10 +10,12 @@ class ActionSystem extends ApeECS.System {
 		this.moveQuery = this.createQuery()
 		.fromAll('PositionComponent').persist();
 
-		// this.moveQuery = this.world.createQuery()
-		// .fromAll("PositionComponent");
 
-		//var results = this.moveQuery.execute();
+
+		//registering to events
+		this.subscribe("PositionComponent");
+
+
 
 		console.log('actionSystem results: ' + 0);
 	}
@@ -36,44 +38,59 @@ class ActionSystem extends ApeECS.System {
 
 		console.log('actionSystem update results: ' + temp.results.size);
 
+
+		//go throuhg changes so we can look at individual components
+		for(var i = 0; i < this.changes.length; i++)
+		{
+			var comp = this.world.getComponent(this.changes[i].component);
+			
+			if(comp !== undefined)
+			{
+				var stopHere = true;
+			}
+		}
+
 		if(tick === 3)
 		{
 			console.log('Action System Update: tick 3');
 
-			console.log('Adding another entity');
-			this.entityE = this.world.createEntity({
-				components: [
-					{
-						type: "PositionComponent",
-						name: "My Position",
-						x: 1,
-						y: 2
-					}
-				]
-			});
+			// console.log('Adding another entity');
+			// this.entityE = this.world.createEntity({
+			// 	components: [
+			// 		{
+			// 			type: "PositionComponent",
+			// 			name: "My Position",
+			// 			x: 1,
+			// 			y: 2
+			// 		}
+			// 	]
+			// });
 
-			var tempResults = this.queryArr[0].execute();
+			// this.world.updateIndexes();
 
-			this.world.updateIndexes();
+			//also destroy stuff for testing
+			var entIterator = temp.results.values();
+			var firstEnt = entIterator.next().value;
+			var secondEnt = entIterator.next().value;
 
-			var tempResults2 = this.queryArr[0].execute();
+			//destroy a component on first entity
+			// firstEnt.removeComponent(firstEnt.getOne("PositionComponent"));
 
+			// this.world.updateIndexes();
+
+			this.moveQuery = null;
+
+			
+			//destroy an entity
+			firstEnt.destroy();
+			
 			var stophere = true;
 		}
 
-
-		////////////////////////////////////////////////////////
-		// STOPPED HERE
-		// Make another system (myOtherSystem.js) and test if making changes to one entity (or adding an entity) in ActionSystem affects the persisted queries in the other systems
-		// - yes, it does. But not immediately. the ape-ecs library ONLY updates ANY persisted query results when "world.updateIndexes()" is called.
-		// - world.updateIndexes() is called:
-		//   - automatically before each individual system runs (in _preUpdate() in world source code)
-		//   - can be called manually by user code by calling "world.updateIndexes()"
-		//
-		// I BELIEVE it should, but only at the beginning of the other system (system._preupdate()).
-		// Also test if running this.world.updateIndexes() will affect the current persisted queries in ActionSystem (and other system too...why not)
-		// - it does.
-		
+		if(tick === 4)
+		{
+			var stophere = true;
+		}
 	}
 }
 
