@@ -267,7 +267,7 @@ class Game {
 
 		//querying again
 		//...well, it works....pretty janky though.
-		var npc2FromBottle = this.world.createQuery().fromReverse(bottle2, "").execute();
+		var npcFromBottle = this.world.createQuery().fromReverse(bottle2, "").execute();
 
 
 		//testing more queries
@@ -289,7 +289,7 @@ class Game {
 		inner join (
 			select distinct c.entityId
 			from tags t
-			where t.type = 'Character'
+			where t.type in ('Character', 'Character2')
 		) fromAny on fromAll.entityId = fromAny.entityId
 
 
@@ -307,7 +307,7 @@ class Game {
 			where t.type = 'Character'			
 
 		*/
-		var q2 = this.world.createQuery().fromAll("MyTag2").fromAny("Character").execute(); 
+		var q2 = this.world.createQuery().fromAll("MyTag2").fromAny("Character", "Character2").execute(); 
 
 		var q3 = this.world.createQuery({
 			all: ["MyTag2"],

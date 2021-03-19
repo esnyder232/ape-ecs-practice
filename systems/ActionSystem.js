@@ -88,6 +88,7 @@ class ActionSystem extends ApeECS.System {
 
 			//destroy an entity (ApeDestroy way)
 			firstEnt.addTag("ApeDestroy");
+			this.world.updateIndexes();
 			
 
 			var stophere = true;
