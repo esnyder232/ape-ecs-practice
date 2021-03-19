@@ -2,6 +2,9 @@ const ApeECS = require('ape-ecs');
 const {performance} = require('perf_hooks');
 const PositionComponent = require('./components/PositionComponent.js');
 const ActionMoveComponent = require('./components/ActionMoveComponent.js');
+const InventorySlotComponent = require('./components/InventorySlotComponent.js');
+const BottleComponent = require('./components/BottleComponent.js');
+
 const ActionSystem = require('./systems/ActionSystem.js');
 const MyOtherSystem = require('./systems/MyOtherSystem.js');
 
@@ -21,14 +24,18 @@ class Game {
 
 	init() {
 		console.log('game init');
-		this.world = new ApeECS.World();
+		this.world = new ApeECS.World({
+			useApeDestroy: true
+		});
 
 		//register components
 		this.world.registerComponent(PositionComponent.PositionComponent, 10);
 		this.world.registerComponent(ActionMoveComponent.ActionMoveComponent, 10);
+		this.world.registerComponent(InventorySlotComponent.InventorySlotComponent, 10);
+		this.world.registerComponent(BottleComponent.BottleComponent, 10);
 		
 		//register tags
-		this.world.registerTags("Character", "PlayerControlled", "MyTag1", "MyTag2");
+		this.world.registerTags("Character", "PlayerControlled", "MyTag1", "MyTag2", "MyTag3", "MyTag4");
 		
 		//register Systems
 		this.world.registerSystem("everyFrame", ActionSystem.ActionSystem);
@@ -126,7 +133,11 @@ class Game {
 		var obj = this.entityA.getObject();
 
 		//destroy entity
-		//this.entityA.destroy();
+		// var qs = this.world.createQuery().from(entityA);
+
+		// this.entityA.destroy();
+
+		// var qs = this.world.createQuery().from(entityA);
 
 
 		this.entityF = this.world.createEntity({
@@ -142,7 +153,190 @@ class Game {
 			}
 		})
 
+
+
+
+
+
+		//////////////////////////////////////////
+		// testing entity refs
+		var bottle = this.world.createEntity({
+			tags:["MyTag2"],
+			components: [
+				{
+					type: "BottleComponent",
+					liquid: "lava",
+					amount: 0.75
+				}
+			]
+		});
+
+		var bottle2 = this.world.createEntity({
+			tags:["MyTag2", "MyTag1"],
+			components: [
+				{
+					type: "BottleComponent",
+					liquid: "lava2",
+					amount: 0.75
+				}
+			]
+		});
+		
+
+		var npc = this.world.createEntity({
+			tags: ["Character"],
+			c: {
+				rightHand: {
+					type: "InventorySlotComponent"
+				},
+				leftHand: {
+					type: "InventorySlotComponent"
+				}
+			}
+		});
+
+		var npc2 = this.world.createEntity({
+			tags: ["Character", "MyTag2"],
+			components: [
+				{
+					type: "InventorySlotComponent",
+					name: "Left Hand"
+				},
+				{
+					type: "InventorySlotComponent",
+					name: "Right Hand"
+				}
+			]
+		});
+
+		var npc3 = this.world.createEntity({
+			tags: ["Character"],
+			c: {
+				rightHand: {
+					type: "InventorySlotComponent"
+				},
+				leftHand: {
+					type: "InventorySlotComponent"
+				}
+			}
+		});
+
+		var npc4 = this.world.createEntity({
+			tags: ["Character", "MyTag4"],
+			components: [
+				{
+					type: "InventorySlotComponent",
+					name: "Left Hand"
+				},
+				{
+					type: "InventorySlotComponent",
+					name: "Right Hand"
+				}
+			]
+		});
+
+		
+		npc.c.rightHand.slot = bottle;
+		var npc2LeftHand = null;
+		var npc4LeftHand = null;
+
+		for(var c of npc2.getComponents("InventorySlotComponent")) {
+			if(c.name === "Left Hand")
+			{
+				npc2LeftHand = c;
+			}
+		}
+
+		for(var c of npc4.getComponents("InventorySlotComponent")) {
+			if(c.name === "Left Hand")
+			{
+				npc4LeftHand = c;
+			}
+		}
+
+		npc2LeftHand.slot = bottle2;
+		npc4LeftHand.slot = bottle2;
+
+		console.log(npc.c.rightHand.slot === bottle);
+
+		//now query going from the bottle -> Inventory -> entity
+		var allCharacterResults = this.world.createQuery().fromAll("Character").execute();
+
+		var fromReverseQuery = this.world.createQuery().fromReverse(bottle, "rightHand");
+		var myEntityRefResults = fromReverseQuery.execute();
+
+		//querying again
+		//...well, it works....pretty janky though.
+		var npc2FromBottle = this.world.createQuery().fromReverse(bottle2, "").execute();
+
+
+		//testing more queries
+		//gets all entities that have MyTag2 tag on them
+		var q1 = this.world.createQuery().fromAll("MyTag2").execute();
+
+		/*
+		Gets all entites that have MyTag2 tag on them OR any entity that has the Character tag on them.
+		It does NOT work as they say it does in the api: "must have MyTag2 component Type or tag AND must have one or more of Character"
+		
+		They are claiming it works like this:
+
+		select entitId
+		from (
+			select distinct c.entityId
+			from components c
+			where c.type = 'MyTag2'
+		) fromAll
+		inner join (
+			select distinct c.entityId
+			from tags t
+			where t.type = 'Character'
+		) fromAny on fromAll.entityId = fromAny.entityId
+
+
+
+		However, it instead works like this:
+			
+			select distinct c.entityId
+			from components c
+			where c.type = 'MyTag2'
+		
+			union all
+			
+			select distinct c.entityId
+			from tags t
+			where t.type = 'Character'			
+
+		*/
+		var q2 = this.world.createQuery().fromAll("MyTag2").fromAny("Character").execute(); 
+
+		var q3 = this.world.createQuery({
+			all: ["MyTag2"],
+			any: ["Character"]
+		}).execute();
+
+
+		var q4 = this.world.createQuery().from(npc2, npc4).execute();
+		var q5 = this.world.createQuery().fromAll("Character").from(npc2, npc4).execute();
+
+
+
+		
+		var q6 = this.world.createQuery().fromAll("Character").execute();
+		var q7 = this.world.createQuery().fromAll("Character").not("MyTag2").execute();
+
+
+
+		var q8 = this.world.createQuery().fromAll("Character").execute();
+		var q9 = this.world.createQuery().fromAll("Character").only("MyTag2").execute();
+		var q10 = this.world.createQuery().fromAll("Character").only("MyTag2","MyTag4").execute();
+
+
+
 		console.log('game init done');
+
+
+
+
 
 		var stopHere = true;
 		

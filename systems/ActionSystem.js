@@ -29,7 +29,9 @@ class ActionSystem extends ApeECS.System {
 		//const entities = this.moveQuery.execute();
 
 
-		var temp = this.createQuery()
+		var temp = this.createQuery({
+			includeApeDestroy: true
+		})
 		.fromAll('PositionComponent').persist();
 
 		temp.execute();
@@ -81,9 +83,13 @@ class ActionSystem extends ApeECS.System {
 			this.moveQuery = null;
 
 			
-			//destroy an entity
-			firstEnt.destroy();
+			//destroy an entity (manual way)
+			//firstEnt.destroy();
+
+			//destroy an entity (ApeDestroy way)
+			firstEnt.addTag("ApeDestroy");
 			
+
 			var stophere = true;
 		}
 
